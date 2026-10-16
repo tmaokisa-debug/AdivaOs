@@ -26,6 +26,7 @@ import { ChartCard, RunActivityChart, PriorityChart, IssueStatusChart, SuccessRa
 import { PageSkeleton } from "../components/PageSkeleton";
 import type { Agent, Issue } from "@paperclipai/shared";
 import { PluginSlotOutlet } from "@/plugins/slots";
+import { AdivaPulsePanel } from "../components/AdivaPulsePanel";
 
 const DASHBOARD_ACTIVITY_LIMIT = 10;
 
@@ -213,6 +214,8 @@ export function Dashboard() {
           </button>
         </div>
       )}
+
+      <AdivaPulsePanel />
 
       <ActiveAgentsPanel companyId={selectedCompanyId!} />
 
