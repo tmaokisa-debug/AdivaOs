@@ -15,7 +15,7 @@ vi.mock("../api/health", () => ({ healthApi: mockHealthApi }));
 
 describe("AdivaPulsePanel", () => {
   let container: HTMLDivElement;
-  let root: ReturnType<typeof createRoot>;
+  let root: ReturnType<typeof createRoot> | undefined;
   let queryClient: QueryClient;
 
   beforeEach(() => {
