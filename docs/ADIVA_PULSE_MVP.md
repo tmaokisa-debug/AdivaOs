@@ -57,11 +57,11 @@ Never expose credentials, environment values, auth headers, or secret-bearing ra
 - [x] Inspect Core Paperclip bridge.
 - [x] Inspect Core event logger and gap-to-capability protocol.
 - [x] Create isolated feature branch.
-- [ ] Locate actual UI package, route, dashboard components, and plugin SDK usage in the repository.
-- [ ] Inspect exact health/dashboard API schemas and auth behavior used by this fork.
+- [x] Locate actual UI package, dashboard components, and plugin SDK usage in the repository. The UI is under `ui/src`; `Dashboard.tsx` already renders a plugin dashboard slot, and `DashboardLive.tsx` is for agent runs.
+- [x] Inspect the existing UI health client (`ui/src/api/health.ts`) and dashboard client (`ui/src/api/dashboard.ts`). The health client performs same-origin `GET /api/health` with cookie credentials.
 - [ ] Locate existing host monitor scripts and their output contracts; do not recreate them.
-- [ ] Implement one overview view using the existing extension point.
-- [ ] Add tests for stale data, timeouts, malformed payloads, partial source failure, and secret redaction.
+- [x] Implement an initial Pulse overview panel in the existing dashboard. It polls the existing health endpoint every 30 seconds and reports the response timestamp and measured request latency. ProBook, Phoenix, and Core bridge remain explicitly UNKNOWN until a real telemetry source is connected.
+- [x] Add component tests for successful Paperclip health and failed health checks while remote host state remains UNKNOWN. Additional stale/malformed/secret-redaction tests remain outstanding.
 - [ ] Run relevant typecheck/build/unit tests.
 - [ ] Record results and rollback steps; do not merge or deploy without test evidence.
 
@@ -80,3 +80,12 @@ Never expose credentials, environment values, auth headers, or secret-bearing ra
 ## Rollback
 
 Before deployment, revert the feature branch commit or disable the added route/plugin contribution. The MVP must not migrate schemas, mutate operational state, restart services, or change credentials.
+
+
+## Implementation update — 2026-10-16
+
+- Created branch `feature/adiva-pulse-mvp`.
+- Added `ui/src/components/AdivaPulsePanel.tsx` and inserted it into the existing `ui/src/pages/Dashboard.tsx`.
+- Added `ui/src/components/AdivaPulsePanel.test.tsx`.
+- The panel uses existing `healthApi.get()` and React Query. It is read-only, polls every 30 seconds, displays request latency and last successful observation time, and does not infer remote host health from the Paperclip API result.
+- Test/build execution has not been performed in a checkout/runtime from this GitHub connector. Do not claim tests pass until CI or a local checkout runs them.
