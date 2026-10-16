@@ -25,7 +25,7 @@ export function AdivaPulsePanel() {
     },
     refetchInterval: REFRESH_INTERVAL_MS,
     staleTime: 15_000,
-    retry: 1,
+    retry: false,
   });
 
   const isStale = health.dataUpdatedAt > 0 && Date.now() - health.dataUpdatedAt > STALE_AFTER_MS;
