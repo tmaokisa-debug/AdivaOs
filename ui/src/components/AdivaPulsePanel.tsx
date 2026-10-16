@@ -1,15 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Activity, CircleHelp, Server, ShieldCheck, WifiOff } from "lucide-react";
-import { healthApi } from "../api/health";
+import { healthApi, type HealthStatus } from "../api/health";
 
 const REFRESH_INTERVAL_MS = 30_000;
 const STALE_AFTER_MS = 60_000;
 
 type PulseObservation = {
-  status: "ok";
-  version?: string;
-  deploymentMode?: "local_trusted" | "authenticated";
-  deploymentExposure?: "private" | "public";
+  health: HealthStatus;
+  latencyMs: number;
 };
 
 function observationLabel(dataUpdatedAt: number): string {
@@ -23,7 +21,7 @@ export function AdivaPulsePanel() {
     queryFn: async (): Promise<PulseObservation> => {
       const startedAt = performance.now();
       const result = await healthApi.get();
-      return { ...result, _latencyMs: Math.round(performance.now() - startedAt) } as PulseObservation;
+      return { health: result, latencyMs: Math.round(performance.now() - startedAt) };
     },
     refetchInterval: REFRESH_INTERVAL_MS,
     staleTime: 15_000,
@@ -32,6 +30,13 @@ export function AdivaPulsePanel() {
 
   const isStale = health.dataUpdatedAt > 0 && Date.now() - health.dataUpdatedAt > STALE_AFTER_MS;
   const apiHealthy = !!health.data && !isStale && !health.isError;
+  const apiState = health.isPending
+    ? "Checking"
+    : health.isError
+      ? health.data && !isStale ? "Degraded" : "Unavailable"
+      : isStale
+        ? "Stale"
+        : health.data?.health.status === "ok" ? "Healthy" : "Unknown";
 
   return (
     <section aria-labelledby="adiva-pulse-title" className="rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -54,8 +59,8 @@ export function AdivaPulsePanel() {
       <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
         <PulseSourceCard
           title="Paperclip API"
-          state={health.isPending ? "Checking" : health.isError && !health.data ? "Unavailable" : isStale ? "Stale" : health.data?.status === "ok" ? "Healthy" : "Unknown"}
-          detail={health.data?.version ? `Version ${health.data.version}` : "GET /api/health"}
+          state={apiState}
+          detail={health.data ? `Version ${health.data.health.version ?? "unknown"} · ${health.data.latencyMs} ms` : "GET /api/health"}
           observedAt={observationLabel(health.dataUpdatedAt)}
           icon={health.isError && !health.data ? WifiOff : ShieldCheck}
         />
@@ -107,7 +112,7 @@ function PulseSourceCard({
   const stateTone =
     state === "Healthy" ? "text-emerald-700 dark:text-emerald-300" :
     state === "Unavailable" ? "text-red-700 dark:text-red-300" :
-    state === "Stale" ? "text-amber-700 dark:text-amber-300" :
+    state === "Degraded" || state === "Stale" ? "text-amber-700 dark:text-amber-300" :
     "text-muted-foreground";
 
   return (
